@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const passport = require("passport");
+const request = require("request");
 const router = express.Router();
 
 // Load Profile Model
@@ -136,7 +137,6 @@ router.delete(
           exp => exp.id !== req.params.exp_id
         );
 
-        // console.log("AQUI MUDAAaaa CARALHO!!!");
         profile.experience = updatedArray;
 
         // Save
@@ -147,7 +147,7 @@ router.delete(
 );
 
 // @route       POST api/profile/education
-// @desc        Add Experience to profile
+// @desc        Add Education to profile
 // @access      Private
 router.post(
   "/education",
@@ -215,7 +215,8 @@ router.post(
     if (!isValid) {
       return res.status(400).json(errors);
     }
-
+    // console.log("AQUI AAAAAAA");
+    // console.log(req.body);
     // Get filds
     const profileFields = {};
     profileFields.user = req.user.id;
@@ -228,7 +229,9 @@ router.post(
     if (req.body.github) profileFields.github = req.body.github;
     // Skills - Split into array
     if (typeof req.body.skills !== "undefined") {
-      profileFields.skills = req.body.skills.split(",");
+      let skillsArray = req.body.skills.split(",");
+      skillsArray = skillsArray.map(x => x.trim());
+      profileFields.skills = skillsArray.filter(Boolean);
     }
     // Social stuff
     profileFields.social = {};
@@ -238,6 +241,9 @@ router.post(
     if (req.body.linkedin) profileFields.social.linkedin = req.body.linkedin;
     if (req.body.instagram) profileFields.social.instagram = req.body.instagram;
 
+    profileFields.company = req.body.company;
+    profileFields.github = req.body.github;
+
     Profile.findOne({ user: req.user.id }).then(profile => {
       if (profile) {
         //update
@@ -245,7 +251,7 @@ router.post(
           { user: req.user.id },
           { $set: profileFields },
           { new: true }
-        ).then(profile => res.json(profile));
+        ).then(profile => res.json(console.log(profile)));
       } else {
         // create
         // Check if handle exists
@@ -275,5 +281,29 @@ router.delete(
       .catch(err => res.status(404).json(err));
   }
 );
+
+// @route       GET api/profile/github/:username/:count/:sort
+// @desc        Get github data from github api
+// @access      Public
+router.get("/github/:username/:count/:sort", (req, res) => {
+  username = req.params.username;
+  clientId = "56b5966da49bd288e0a7";
+  clientSecret = "d0832bd2962c27e2b8944fcc04309a3b79fd1c3f";
+  count = req.params.count;
+  sort = req.params.sort;
+  const options = {
+    url: `https://api.github.com/users/${username}/repos?per_page=${count}&sort=${sort}&client_id=${clientId}&client_secret=${clientSecret}`,
+    headers: {
+      "User-Agent": "request"
+    }
+  };
+  function callback(error, response, body) {
+    if (!error && response.statusCode == 200) {
+      const info = JSON.parse(body);
+      res.json(info);
+    }
+  }
+  request(options, callback);
+});
 
 module.exports = router;

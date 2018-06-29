@@ -4,8 +4,11 @@
   "description": "Social Network for Developers",
   "main": "server.js",
   "scripts": {
+    "client-install": "npm install --prefix client",
     "start": "node server.js",
-    "server": "nodemon server.js"
+    "server": "nodemon server.js",
+    "client": "npm start --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
   },
   "author": "Bruno Kern",
   "license": "ISC",
@@ -18,9 +21,11 @@
     "mongoose": "^5.1.5",
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",
+    "request": "^2.87.0",
     "validator": "^10.3.0"
   },
   "devDependencies": {
-    "nodemon": "^1.17.5"
+    "nodemon": "^1.17.5",
+    "concurrently": "^3.6.0"
   }
 }

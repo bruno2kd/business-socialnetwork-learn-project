@@ -19,6 +19,15 @@ const validateCommentInput = require("../../validation/comment");
 // @access      Public
 router.get("/test", (req, res) => res.json({ msg: "Posts Works" }));
 
+// @route       GET api/posts/:post_id
+// @desc        Get one posts
+// @access      Public
+router.get("/:post_id", (req, res) => {
+  Post.findById(req.params.post_id)
+    .then(post => res.json(post))
+    .catch(err => res.status(404).json({ message: "No post found" }));
+});
+
 // @route       GET api/posts/
 // @desc        Read all posts
 // @access      Public
@@ -26,15 +35,6 @@ router.get("/", (req, res) => {
   Post.find()
     .sort({ date: -1 })
     .then(posts => res.json(posts))
-    .catch(err => res.status(404).json({ message: "No post found" }));
-});
-
-// @route       GET api/posts/:post_id
-// @desc        Get one posts
-// @access      Public
-router.get("/:post_id", (req, res) => {
-  Post.findById(req.params.post_id)
-    .then(post => res.json(post))
     .catch(err => res.status(404).json({ message: "No post found" }));
 });
 
@@ -76,7 +76,7 @@ router.delete(
         if (post.user == req.user.id) {
           post
             .remove()
-            .then(() => res.json({ success: true }))
+            .then(() => res.json({ post_id: req.params.post_id }))
             .catch(err => res.status(404).json(err));
         } else {
           return res.status(401).json({ message: "User not authorized" });
